@@ -24,6 +24,13 @@ namespace CosmosDbClient.Repository
             _container = _database.GetContainer(cosmosSettings.ContainerName);
         }
 
+        public CosmosRepository(string connectionString, string databaseName, string containerName)
+        {
+            _client = new CosmosClient(connectionString);
+            _database = _client.GetDatabase(databaseName);
+            _container = _database.GetContainer(containerName);
+        }
+
         /// <summary>
         /// Return an object by id field and partition key.
         /// </summary>
