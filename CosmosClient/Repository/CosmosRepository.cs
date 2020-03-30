@@ -96,10 +96,9 @@ namespace CosmosDbClient.Repository
         /// </summary>
         /// <param name="where"></param>
         /// <returns></returns>
-        public async Task<List<T>> QueryLinq(Func<T, Boolean> where)
+        public List<T> QueryLinq(Func<T, Boolean> where)
         {
             return _container.GetItemLinqQueryable<T>(true).Where(where).AsEnumerable().ToList();
-
         }
         /// <summary>
         /// Update a specfic item in current container.
@@ -124,5 +123,19 @@ namespace CosmosDbClient.Repository
         /// <param name="partitionKey"></param>
         /// <returns></returns>
         public async Task Delete(string id, string partitionKey) => await _container.DeleteItemAsync<T>(id, new PartitionKey(partitionKey));
+
+        /// <summary>
+        /// Create a database in the current client , specificing the id
+        /// </summary>
+        /// <param name="databaseId"></param>
+        public async Task CreateDatabase(string databaseId) => await _client.CreateDatabaseIfNotExistsAsync(databaseId);
+
+        /// <summary>
+        /// Create a container inside a database
+        /// </summary>
+        /// <param name="containerId"></param>
+        /// <param name="partitionKeyPath"></param>
+        /// <returns></returns>
+        public async Task CreateContainer(string containerId, string partitionKeyPath) => await _database.CreateContainerAsync(containerId, partitionKeyPath);
     }
 }
