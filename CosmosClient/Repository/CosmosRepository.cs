@@ -2,7 +2,9 @@
 using CosmosDbClient.Interfaces.Models;
 using CosmosDbClient.Interfaces.Repository;
 using Microsoft.Azure.Cosmos;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CosmosDbClient.Repository
@@ -88,6 +90,25 @@ namespace CosmosDbClient.Repository
             }
 
             return result;
+        }
+        /// <summary>
+        /// List of all elements of current container with linq where condition
+        /// </summary>
+        /// <param name="where"></param>
+        /// <returns></returns>
+        public async Task<List<T>> QueryLinq(Func<T, Boolean> where)
+        {
+            return _container.GetItemLinqQueryable<T>(true).Where(where).AsEnumerable().ToList();
+
+        }
+        /// <summary>
+        /// Update a specfic item in current container.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns></returns>    
+        public async Task<T> Upsert(T element)
+        {
+            return await _container.UpsertItemAsync<T>(element);
         }
         /// <summary>
         /// Update a specfic item in current container.
