@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿
+using Newtonsoft.Json;
 
 namespace CosmosDbClient.Interfaces.Models
 {
@@ -10,12 +11,7 @@ namespace CosmosDbClient.Interfaces.Models
         /// <summary>
         /// Document identifier 
         /// </summary>
-        [JsonPropertyName("id")]
+        [JsonProperty("id")]
         public string Id { get; set; }
-        /// <summary>
-        /// Timestamp of last edit of a document in cosmos db
-        /// </summary>
-        [JsonPropertyName("_ts")]
-        public int Timestamp { get; set; }
     }
 }

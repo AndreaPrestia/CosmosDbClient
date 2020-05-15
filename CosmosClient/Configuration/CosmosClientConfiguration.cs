@@ -5,22 +5,13 @@ using System.IO;
 
 namespace CosmosDbClient.Configuration
 {
-    /// <summary>
-    /// Use to initialize configuration of a databasesettings
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class CosmosConfiguration<T> : ICosmosConfiguration<T> where T : class, ICosmosSettings, new()
+    public static class CosmosClientConfiguration 
     {
-        public CosmosConfiguration()
-        {
-
-        }
-
         /// <summary>
         /// Get the configuration from local.settings.json (ex. Azure functions environment)
         /// </summary>
         /// <returns></returns>
-        public T GetAzureConfiguration()
+        public static T GetAzureConfiguration<T>() where T : class, ICosmosSettings, new()
         {
             string key = typeof(T).Name;
 
@@ -32,17 +23,13 @@ namespace CosmosDbClient.Configuration
             var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("local.settings.json", optional: true, reloadOnChange: true).AddEnvironmentVariables();
 
             var configuration = builder.Build();
-            
+
             configuration.Bind(key, instance);
 
             return instance;
         }
 
-        /// <summary>
-        /// Get the configuration from appsettings.json
-        /// </summary>
-        /// <returns></returns>
-        public T GetConfiguration()
+        public static T GetConfiguration<T>() where T : class, ICosmosSettings, new()
         {
             string key = typeof(T).Name;
 
@@ -65,7 +52,7 @@ namespace CosmosDbClient.Configuration
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public T GetConfiguration(string filename)
+        public static T GetConfiguration<T>(string filename) where T : class, ICosmosSettings, new()
         {
             string key = typeof(T).Name;
 
@@ -82,5 +69,6 @@ namespace CosmosDbClient.Configuration
 
             return instance;
         }
+
     }
 }
