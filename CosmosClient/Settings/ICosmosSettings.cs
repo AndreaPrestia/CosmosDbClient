@@ -1,4 +1,4 @@
-﻿namespace CosmosDbClient.Interfaces.Configuration
+﻿namespace CosmosDbClient.Settings
 {
     /// <summary>
     /// This interface is the basic configuration interface.

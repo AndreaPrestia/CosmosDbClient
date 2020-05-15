@@ -1,12 +1,11 @@
-﻿
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace CosmosDbClient.Interfaces.Models
+namespace CosmosDbClient.Entities
 {
     /// <summary>
     /// This is the base cosmos db model. It containts the common parameters for cosmos db items.
     /// </summary>
-    public interface ICosmosModel
+    public class CosmosEntity
     {
         /// <summary>
         /// Document identifier 

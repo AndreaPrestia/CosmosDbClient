@@ -1,6 +1,5 @@
-﻿using CosmosDbClient.Interfaces.Configuration;
-using CosmosDbClient.Interfaces.Models;
-using CosmosDbClient.Interfaces.Repository;
+﻿using CosmosDbClient.Entities;
+using CosmosDbClient.Settings;
 using Microsoft.Azure.Cosmos;
 using System;
 using System.Collections.Generic;
@@ -10,10 +9,10 @@ using System.Threading.Tasks;
 namespace CosmosDbClient.Repository
 {
     /// <summary>
-    /// Implementation of ICosmosRepository<T>
+    /// This is the generic repository object
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class CosmosRepository<T> : ICosmosRepository<T> where T : class, ICosmosModel, new()
+    public class CosmosRepository<T> where T : CosmosEntity, new()
     {
         private readonly CosmosClient _client;
         private readonly Database _database;

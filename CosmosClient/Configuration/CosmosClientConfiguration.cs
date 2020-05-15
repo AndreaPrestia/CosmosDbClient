@@ -1,4 +1,4 @@
-﻿using CosmosDbClient.Interfaces.Configuration;
+﻿using CosmosDbClient.Settings;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
