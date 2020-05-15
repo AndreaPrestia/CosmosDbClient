@@ -33,12 +33,12 @@ namespace CosmosDbClient.Repository
         }
 
         /// <summary>
-        /// Return an object by id field and partition key.
+        /// Return an object by id field
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="partitionKey"></param>
         /// <returns></returns>
-        public async Task<T> Get(string id, string partitionKey) => await _container.ReadItemAsync<T>(id, new PartitionKey(partitionKey));
+        public T Get(string id) => _container.GetItemLinqQueryable<T>(true).Where(x => x.Id == id).FirstOrDefault();
+
         /// <summary>
         /// Insert an element in specified container.
         /// </summary>
@@ -117,10 +117,36 @@ namespace CosmosDbClient.Repository
         /// <summary>
         /// Update a specfic item in current container.
         /// </summary>
+        /// <param name="element"></param>
+        /// <returns></returns>
+        public async Task Update(T element) 
+        {
+            if (string.IsNullOrWhiteSpace(element.Id))
+                throw new ArgumentException("Empty Id field");
+
+            if(Guid.Parse(element.Id) == Guid.Empty)
+                throw new ArgumentException("Empty Id field");
+
+            await _container.ReplaceItemAsync(element, element.Id);
+        }
+
+        /// <summary>
+        /// Update a specfic item in current container.
+        /// </summary>
         /// <param name="id"></param>
         /// <param name="element"></param>
         /// <returns></returns>
-        public async Task Update(string id, T element) => await _container.ReplaceItemAsync(element, id);
+        public async Task Update(T element, string partitionKeyValue)
+        {
+            if (string.IsNullOrWhiteSpace(element.Id))
+                throw new ArgumentException("Empty Id field");
+
+            if (Guid.Parse(element.Id) == Guid.Empty)
+                throw new ArgumentException("Empty Id field");
+
+            await _container.ReplaceItemAsync(element, element.Id, new PartitionKey(partitionKeyValue));
+        }
+
         /// <summary>
         /// Delete a specific item in current container.
         /// </summary>
