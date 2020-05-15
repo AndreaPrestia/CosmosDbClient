@@ -45,7 +45,13 @@ namespace CosmosDbClient.Repository
         /// </summary>
         /// <param name="element"></param>
         /// <returns></returns>
-        public async Task Insert(T element) => await _container.CreateItemAsync(element);
+        public async Task Insert(T element)
+        {
+            if (Guid.Parse(element.Id) == Guid.Empty)
+                element.Id = Guid.NewGuid().ToString();
+
+            await _container.CreateItemAsync(element);
+        }
         /// <summary>
         /// List of all elements of current container
         /// </summary>
