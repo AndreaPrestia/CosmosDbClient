@@ -97,6 +97,29 @@ namespace CosmosDbClient.Repository
             return result;
         }
         /// <summary>
+        /// List of element of current container specified by a queryText and continuation token. It use the sql api
+        /// </summary>
+        /// <param name="queryText"></param>
+        /// <returns></returns>
+        public async Task<List<T>> Query(string queryText, string continuationToken)
+        {
+            List<T> result = new List<T>();
+
+            var queryResult = _container.GetItemQueryIterator<T>(queryText, continuationToken);
+
+            while (queryResult.HasMoreResults)
+            {
+                FeedResponse<T> resultSet = await queryResult.ReadNextAsync();
+
+                foreach (T element in resultSet)
+                {
+                    result.Add(element);
+                }
+            }
+
+            return result;
+        }
+        /// <summary>
         /// List of all elements of current container with linq where condition
         /// </summary>
         /// <param name="where"></param>
@@ -144,8 +167,19 @@ namespace CosmosDbClient.Repository
             if (Guid.Parse(element.Id) == Guid.Empty)
                 throw new ArgumentException("Empty Id field");
 
+            if (string.IsNullOrWhiteSpace(partitionKeyValue))
+                throw new ArgumentException("partitionKeyValue is empty");
+
             await _container.ReplaceItemAsync(element, element.Id, new PartitionKey(partitionKeyValue));
         }
+
+        /// <summary>
+        /// Delete a specific item in current container, with id and partitionKey.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="partitionKey"></param>
+        /// <returns></returns>
+        public async Task Delete(string id, string partitionKey) => await _container.DeleteItemAsync<T>(id, new PartitionKey(partitionKey));
 
         /// <summary>
         /// Delete a specific item in current container.
@@ -153,8 +187,16 @@ namespace CosmosDbClient.Repository
         /// <param name="id"></param>
         /// <param name="partitionKey"></param>
         /// <returns></returns>
-        public async Task Delete(string id, string partitionKey) => await _container.DeleteItemAsync<T>(id, new PartitionKey(partitionKey));
+        public async Task Delete(T element) 
+        {
+            if (string.IsNullOrWhiteSpace(element.Id))
+                throw new ArgumentException("Empty Id field");
 
+            if (Guid.Parse(element.Id) == Guid.Empty)
+                throw new ArgumentException("Empty Id field");
+
+             await _container.DeleteItemAsync<T>(element.Id, new PartitionKey(element.Id));
+        }
         /// <summary>
         /// Create a database in the current client , specificing the id
         /// </summary>
