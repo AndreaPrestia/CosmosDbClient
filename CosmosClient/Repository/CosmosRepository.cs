@@ -142,12 +142,12 @@ namespace CosmosDbClient.Repository
         /// </summary>
         /// <param name="element"></param>
         /// <returns></returns>
-        public async Task Update(T element) 
+        public async Task Update(T element)
         {
             if (string.IsNullOrWhiteSpace(element.Id))
                 throw new ArgumentException("Empty Id field");
 
-            if(Guid.Parse(element.Id) == Guid.Empty)
+            if (Guid.Parse(element.Id) == Guid.Empty)
                 throw new ArgumentException("Empty Id field");
 
             await _container.ReplaceItemAsync(element, element.Id);
@@ -187,7 +187,7 @@ namespace CosmosDbClient.Repository
         /// <param name="id"></param>
         /// <param name="partitionKey"></param>
         /// <returns></returns>
-        public async Task Delete(T element) 
+        public async Task Delete(T element)
         {
             if (string.IsNullOrWhiteSpace(element.Id))
                 throw new ArgumentException("Empty Id field");
@@ -195,7 +195,7 @@ namespace CosmosDbClient.Repository
             if (Guid.Parse(element.Id) == Guid.Empty)
                 throw new ArgumentException("Empty Id field");
 
-             await _container.DeleteItemAsync<T>(element.Id, new PartitionKey(element.Id));
+            await _container.DeleteItemAsync<T>(element.Id, new PartitionKey(element.Id));
         }
         /// <summary>
         /// Create a database in the current client , specificing the id
@@ -210,5 +210,32 @@ namespace CosmosDbClient.Repository
         /// <param name="partitionKeyPath"></param>
         /// <returns></returns>
         public async Task CreateContainer(string containerId, string partitionKeyPath) => await _database.CreateContainerAsync(containerId, partitionKeyPath);
+
+        /// <summary>
+        /// Count all elements from the container.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<double> Count()
+        {
+            var queryResult = _container.GetItemQueryIterator<T>();
+
+            int result = 0;
+            
+            if (queryResult.HasMoreResults)
+            {
+                FeedResponse<T> resultSet = await queryResult.ReadNextAsync();
+
+                result = resultSet.Count();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Count all elements from the container with a specific linq query.
+        /// </summary>
+        /// <param name="where"></param>
+        /// <returns></returns>
+        public double Count(Func<T, Boolean> where) => _container.GetItemLinqQueryable<T>(true).Where(where).Count();
     }
 }
