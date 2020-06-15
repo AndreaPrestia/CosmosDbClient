@@ -5,12 +5,19 @@
     <Description>A simple Microsoft.Azure.Cosmos wrapper that make communication between CosmosDB and your .NET Core application simpler.</Description>
     <PackageProjectUrl>https://github.com/AndreaPrestia/CosmosDbClient</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AndreaPrestia/CosmosDbClient</RepositoryUrl>
-    <RepositoryType>GIT</RepositoryType>
+    <RepositoryType>MIT</RepositoryType>
     <PackageTags>MicrosoftAzure, CosmosDB, NoSQL</PackageTags>
     <PackageReleaseNotes>First release with main functions</PackageReleaseNotes>
     <Copyright>Copyright © Andrea Prestia 2020</Copyright>
-    <PackageLicenseExpression>GNU</PackageLicenseExpression>
+    <PackageLicenseExpression></PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>APrs.CosmosDbClient</PackageId>
+    <Authors>Andrea Prestia</Authors>
+    <Company>Andrea Prestia</Company>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
