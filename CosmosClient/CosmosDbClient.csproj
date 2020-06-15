@@ -9,7 +9,7 @@
     <PackageTags>MicrosoftAzure, CosmosDB, NoSQL</PackageTags>
     <PackageReleaseNotes>First release with main functions</PackageReleaseNotes>
     <Copyright>Copyright © Andrea Prestia 2020</Copyright>
-    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>APrs.CosmosDbClient</PackageId>
     <Authors>Andrea Prestia</Authors>
