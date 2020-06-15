@@ -2,10 +2,23 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Description>A simple Microsoft.Azure.Cosmos wrapper that make communication between CosmosDB and your .NET Core application simpler.</Description>
+    <PackageProjectUrl>https://github.com/AndreaPrestia/CosmosDbClient</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AndreaPrestia/CosmosDbClient</RepositoryUrl>
+    <RepositoryType>GIT</RepositoryType>
+    <PackageTags>MicrosoftAzure, CosmosDB, NoSQL</PackageTags>
+    <PackageReleaseNotes>First release with main functions</PackageReleaseNotes>
+    <Copyright>Copyright © Andrea Prestia 2020</Copyright>
+    <PackageLicenseExpression>GNU</PackageLicenseExpression>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.7.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.3" />
