@@ -16,7 +16,7 @@ namespace CosmosDbClient.Configuration
             string key = typeof(T).Name;
 
             if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException($"{nameof(key)} is null or empty");
 
             T instance = new T();
 
@@ -34,7 +34,7 @@ namespace CosmosDbClient.Configuration
             string key = typeof(T).Name;
 
             if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException($"{nameof(key)} is null or empty");
 
             T instance = new T();
 
@@ -57,7 +57,7 @@ namespace CosmosDbClient.Configuration
             string key = typeof(T).Name;
 
             if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key));
+                throw new ArgumentNullException($"{nameof(key)} is null or empty");
 
             T instance = new T();
 
