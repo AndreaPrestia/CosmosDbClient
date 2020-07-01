@@ -5,9 +5,7 @@ using CosmosDbClient.Settings;
 using Microsoft.Azure.Cosmos;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace CosmosDbClient.Repository
@@ -105,16 +103,27 @@ namespace CosmosDbClient.Repository
         /// List of element of current container specified by a queryText. It use the sql api
         /// </summary>
         /// <param name="queryText"></param>
+        /// <param name="parameters"></param>
         /// <exception cref="ArgumentNullException">Throws when queryText is null</exception>
         /// <returns></returns>
-        public async Task<List<T>> Query(string queryText)
+        public async Task<List<T>> Query(string queryText, Dictionary<string, object> parameters = null)
         {
             if (string.IsNullOrEmpty(queryText))
                 throw new ArgumentNullException($"{nameof(queryText)} is empty or null");
 
             List<T> result = new List<T>();
 
-            var queryResult = _container.GetItemQueryIterator<T>(queryText);
+            QueryDefinition queryDefinition = new QueryDefinition(queryText);
+
+            if(parameters != null)
+            {
+                foreach(KeyValuePair<string, object> parameter in parameters)
+                {
+                    queryDefinition.WithParameter(parameter.Key, parameter.Value);
+                }
+            }
+
+            var queryResult = _container.GetItemQueryIterator<T>(queryDefinition);
 
             while (queryResult.HasMoreResults)
             {
@@ -128,13 +137,17 @@ namespace CosmosDbClient.Repository
 
             return result;
         }
+
+        
         /// <summary>
         /// List of element of current container specified by a queryText and continuation token. It use the sql api
         /// </summary>
         /// <param name="queryText"></param>
+        /// <param name="continuationToken"></param>
+        /// <param name="parameters"></param>
         /// <exception cref="ArgumentNullException">Throws when queryText or continuationToken is null</exception>
         /// <returns></returns>
-        public async Task<List<T>> Query(string queryText, string continuationToken)
+        public async Task<List<T>> Query(string queryText, string continuationToken, Dictionary<string, object> parameters = null)
         {
             if (string.IsNullOrEmpty(queryText))
                 throw new ArgumentNullException($"{nameof(queryText)} is empty or null");
@@ -144,7 +157,17 @@ namespace CosmosDbClient.Repository
 
             List<T> result = new List<T>();
 
-            var queryResult = _container.GetItemQueryIterator<T>(queryText, continuationToken);
+            QueryDefinition queryDefinition = new QueryDefinition(queryText);
+
+            if (parameters != null)
+            {
+                foreach (KeyValuePair<string, object> parameter in parameters)
+                {
+                    queryDefinition.WithParameter(parameter.Key, parameter.Value);
+                }
+            }
+
+            var queryResult = _container.GetItemQueryIterator<T>(queryDefinition, continuationToken);
 
             while (queryResult.HasMoreResults)
             {
