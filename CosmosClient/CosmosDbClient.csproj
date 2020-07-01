@@ -7,14 +7,14 @@
     <RepositoryUrl>https://github.com/AndreaPrestia/CosmosDbClient</RepositoryUrl>
     <RepositoryType>MIT</RepositoryType>
     <PackageTags>MicrosoftAzure, CosmosDB, NoSQL</PackageTags>
-    <PackageReleaseNotes>Updated exceptions management and validation of contents. Added IDisposable implementation for CosmosRepository&lt;T&gt;</PackageReleaseNotes>
+    <PackageReleaseNotes>Added sql injections management with parameters parametrization.</PackageReleaseNotes>
     <Copyright>Copyright © Andrea Prestia 2020</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>APrs.CosmosDbClient</PackageId>
     <Authors>Andrea Prestia</Authors>
     <Company>Andrea Prestia</Company>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <NeutralLanguage></NeutralLanguage>
   </PropertyGroup>
 
