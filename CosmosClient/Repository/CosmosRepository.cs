@@ -66,7 +66,7 @@ namespace CosmosDbClient.Repository
             if (element == null)
                 throw new ArgumentNullException($"{nameof(element)} reference not set to an instance of an object<{typeof(T)}>");
 
-            if (Guid.Parse(element.Id) == Guid.Empty)
+            if (string.IsNullOrEmpty(element.Id) || Guid.Parse(element.Id) == Guid.Empty)
                 element.Id = Guid.NewGuid().ToString();
 
             ItemResponse<T> response = await _container.CreateItemAsync(element).ConfigureAwait(false);
@@ -202,8 +202,8 @@ namespace CosmosDbClient.Repository
             if (element == null)
                 throw new ArgumentNullException($"{nameof(element)} reference not set to an instance of an object<{typeof(T)}>");
 
-            if (string.IsNullOrEmpty(element.Id))
-                throw new ArgumentNullException($"{nameof(element.Id)} is null or empty");
+            if (string.IsNullOrEmpty(element.Id) || Guid.Parse(element.Id) == Guid.Empty)
+                element.Id = Guid.NewGuid().ToString();
 
             ItemResponse<T> response = await _container.UpsertItemAsync<T>(element).ConfigureAwait(false);
 
@@ -389,7 +389,7 @@ namespace CosmosDbClient.Repository
         /// <returns></returns>
         public double Count(Func<T, Boolean> where) => _container.GetItemLinqQueryable<T>(true).Where(where).Count();
 
-        private bool IsSuccessStatusCode(ItemResponse<T> response)
+        private static bool IsSuccessStatusCode(ItemResponse<T> response)
         {
             if (response == null)
                 return false;
@@ -402,7 +402,7 @@ namespace CosmosDbClient.Repository
             return false;
         }
 
-        private bool IsSuccessStatusCode(DatabaseResponse response)
+        private static bool IsSuccessStatusCode(DatabaseResponse response)
         {
             if (response == null)
                 return false;
@@ -415,7 +415,7 @@ namespace CosmosDbClient.Repository
             return false;
         }
 
-        private bool IsSuccessStatusCode(ContainerResponse response)
+        private static bool IsSuccessStatusCode(ContainerResponse response)
         {
             if (response == null)
                 return false;
