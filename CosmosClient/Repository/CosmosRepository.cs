@@ -21,9 +21,13 @@ namespace CosmosDbClient.Repository
         private readonly Database _database;
         private readonly Container _container;
 
+        /// <summary>
+        /// Ctor with ICosmosSettings
+        /// </summary>
+        /// <param name="cosmosSettings"></param>
         public CosmosRepository(ICosmosSettings cosmosSettings)
         {
-            if(cosmosSettings == null)
+            if (cosmosSettings == null)
                 throw new ArgumentNullException($"{nameof(cosmosSettings)} reference not set to an instance of an object");
 
             if (string.IsNullOrEmpty(cosmosSettings.ConnectionString))
@@ -40,6 +44,12 @@ namespace CosmosDbClient.Repository
             _container = _database.GetContainer(cosmosSettings.ContainerName);
         }
 
+        /// <summary>
+        /// Ctor with single elements
+        /// </summary>
+        /// <param name="connectionString"></param>
+        /// <param name="databaseName"></param>
+        /// <param name="containerName"></param>
         public CosmosRepository(string connectionString, string databaseName, string containerName)
         {
             _client = new CosmosClient(connectionString);
@@ -78,6 +88,29 @@ namespace CosmosDbClient.Repository
         }
 
         /// <summary>
+        /// Insert an element in specified container. Sync.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Throws when element is null</exception>
+        /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
+        /// <param name="element"></param>
+        /// <returns></returns>
+        public T InsertSync(T element)
+        {
+            if (element == null)
+                throw new ArgumentNullException($"{nameof(element)} reference not set to an instance of an object<{typeof(T)}>");
+
+            if (string.IsNullOrEmpty(element.Id) || Guid.Parse(element.Id) == Guid.Empty)
+                element.Id = Guid.NewGuid().ToString();
+
+            ItemResponse<T> response = _container.CreateItemAsync(element).Result;
+
+            if (!IsSuccessStatusCode(response))
+                throw new CosmosDbClientException($"Cannot upsert element response code {response.StatusCode}");
+
+            return response.Resource;
+        }
+
+        /// <summary>
         /// List of all elements of current container
         /// </summary>
         /// <returns></returns>
@@ -99,6 +132,30 @@ namespace CosmosDbClient.Repository
 
             return result;
         }
+
+        /// <summary>
+        /// List of all elements of current container
+        /// </summary>
+        /// <returns></returns>
+        public List<T> QuerySync()
+        {
+            List<T> result = new List<T>();
+
+            var queryResult = _container.GetItemQueryIterator<T>();
+
+            while (queryResult.HasMoreResults)
+            {
+                FeedResponse<T> resultSet = queryResult.ReadNextAsync().Result;
+
+                foreach (T element in resultSet)
+                {
+                    result.Add(element);
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// List of element of current container specified by a queryText. It use the sql api
         /// </summary>
@@ -115,9 +172,9 @@ namespace CosmosDbClient.Repository
 
             QueryDefinition queryDefinition = new QueryDefinition(queryText);
 
-            if(parameters != null)
+            if (parameters != null)
             {
-                foreach(KeyValuePair<string, object> parameter in parameters)
+                foreach (KeyValuePair<string, object> parameter in parameters)
                 {
                     queryDefinition.WithParameter(parameter.Key, parameter.Value);
                 }
@@ -138,7 +195,45 @@ namespace CosmosDbClient.Repository
             return result;
         }
 
-        
+        /// <summary>
+        /// List of element of current container specified by a queryText. It use the sql api
+        /// </summary>
+        /// <param name="queryText"></param>
+        /// <param name="parameters"></param>
+        /// <exception cref="ArgumentNullException">Throws when queryText is null</exception>
+        /// <returns></returns>
+        public List<T> QuerySync(string queryText, Dictionary<string, object> parameters = null)
+        {
+            if (string.IsNullOrEmpty(queryText))
+                throw new ArgumentNullException($"{nameof(queryText)} is empty or null");
+
+            List<T> result = new List<T>();
+
+            QueryDefinition queryDefinition = new QueryDefinition(queryText);
+
+            if (parameters != null)
+            {
+                foreach (KeyValuePair<string, object> parameter in parameters)
+                {
+                    queryDefinition.WithParameter(parameter.Key, parameter.Value);
+                }
+            }
+
+            var queryResult = _container.GetItemQueryIterator<T>(queryDefinition);
+
+            while (queryResult.HasMoreResults)
+            {
+                FeedResponse<T> resultSet = queryResult.ReadNextAsync().Result;
+
+                foreach (T element in resultSet)
+                {
+                    result.Add(element);
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// List of element of current container specified by a queryText and continuation token. It use the sql api
         /// </summary>
@@ -172,6 +267,49 @@ namespace CosmosDbClient.Repository
             while (queryResult.HasMoreResults)
             {
                 FeedResponse<T> resultSet = await queryResult.ReadNextAsync().ConfigureAwait(false);
+
+                foreach (T element in resultSet)
+                {
+                    result.Add(element);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// List of element of current container specified by a queryText and continuation token. It use the sql api
+        /// </summary>
+        /// <param name="queryText"></param>
+        /// <param name="continuationToken"></param>
+        /// <param name="parameters"></param>
+        /// <exception cref="ArgumentNullException">Throws when queryText or continuationToken is null</exception>
+        /// <returns></returns>
+        public List<T> QuerySync(string queryText, string continuationToken, Dictionary<string, object> parameters = null)
+        {
+            if (string.IsNullOrEmpty(queryText))
+                throw new ArgumentNullException($"{nameof(queryText)} is empty or null");
+
+            if (string.IsNullOrEmpty(continuationToken))
+                throw new ArgumentNullException($"{nameof(continuationToken)} is empty or null");
+
+            List<T> result = new List<T>();
+
+            QueryDefinition queryDefinition = new QueryDefinition(queryText);
+
+            if (parameters != null)
+            {
+                foreach (KeyValuePair<string, object> parameter in parameters)
+                {
+                    queryDefinition.WithParameter(parameter.Key, parameter.Value);
+                }
+            }
+
+            var queryResult = _container.GetItemQueryIterator<T>(queryDefinition, continuationToken);
+
+            while (queryResult.HasMoreResults)
+            {
+                FeedResponse<T> resultSet = queryResult.ReadNextAsync().Result;
 
                 foreach (T element in resultSet)
                 {
@@ -218,6 +356,29 @@ namespace CosmosDbClient.Repository
         /// </summary>
         /// <param name="element"></param>
         /// <exception cref="ArgumentNullException">Throws when element or element.Id is null</exception>
+        /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
+        /// <returns></returns>    
+        public T UpsertSync(T element)
+        {
+            if (element == null)
+                throw new ArgumentNullException($"{nameof(element)} reference not set to an instance of an object<{typeof(T)}>");
+
+            if (string.IsNullOrEmpty(element.Id) || Guid.Parse(element.Id) == Guid.Empty)
+                element.Id = Guid.NewGuid().ToString();
+
+            ItemResponse<T> response = _container.UpsertItemAsync<T>(element).Result;
+
+            if (!IsSuccessStatusCode(response))
+                throw new CosmosDbClientException($"Cannot upsert element response code {response.StatusCode}");
+
+            return response.Resource;
+        }
+
+        /// <summary>
+        /// Update a specfic item in current container.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <exception cref="ArgumentNullException">Throws when element or element.Id is null</exception>
         /// <exception cref="ArgumentException">Throws when element.Id is an empty Guid</exception>
         /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
         /// <returns></returns>
@@ -233,6 +394,33 @@ namespace CosmosDbClient.Repository
                 throw new ArgumentException(ErrorMessages.InvalidElementId);
 
             ItemResponse<T> response = await _container.ReplaceItemAsync(element, element.Id).ConfigureAwait(false);
+
+            if (!IsSuccessStatusCode(response))
+                throw new CosmosDbClientException($"Cannot upsert element response code {response.StatusCode}");
+
+            return response.Resource;
+        }
+
+        /// <summary>
+        /// Update a specfic item in current container.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <exception cref="ArgumentNullException">Throws when element or element.Id is null</exception>
+        /// <exception cref="ArgumentException">Throws when element.Id is an empty Guid</exception>
+        /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
+        /// <returns></returns>
+        public T UpdateSync(T element)
+        {
+            if (element == null)
+                throw new ArgumentNullException($"{nameof(element)} reference not set to an instance of an object<{typeof(T)}>");
+
+            if (string.IsNullOrEmpty(element.Id))
+                throw new ArgumentNullException($"{nameof(element.Id)} is null or empty");
+
+            if (Guid.Parse(element.Id) == Guid.Empty)
+                throw new ArgumentException(ErrorMessages.InvalidElementId);
+
+            ItemResponse<T> response = _container.ReplaceItemAsync(element, element.Id).Result;
 
             if (!IsSuccessStatusCode(response))
                 throw new CosmosDbClientException($"Cannot upsert element response code {response.StatusCode}");
@@ -272,6 +460,37 @@ namespace CosmosDbClient.Repository
         }
 
         /// <summary>
+        /// Update a specfic item in current container.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="element"></param>
+        /// <exception cref="ArgumentNullException">Throws when element or element.Id or partitionKeyValue is null</exception>
+        /// <exception cref="ArgumentException">Throws when element.Id is an empty Guid</exception>
+        /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
+        /// <returns></returns>
+        public T UpdateSync(T element, string partitionKeyValue)
+        {
+            if (element == null)
+                throw new ArgumentNullException($"{nameof(element)} reference not set to an instance of an object<{typeof(T)}>");
+
+            if (string.IsNullOrEmpty(element.Id))
+                throw new ArgumentNullException($"{nameof(element.Id)} is null or empty");
+
+            if (Guid.Parse(element.Id) == Guid.Empty)
+                throw new ArgumentException(ErrorMessages.InvalidElementId);
+
+            if (string.IsNullOrEmpty(partitionKeyValue))
+                throw new ArgumentNullException($"{nameof(partitionKeyValue)} is null or empty");
+
+            ItemResponse<T> response = _container.ReplaceItemAsync(element, element.Id, new PartitionKey(partitionKeyValue)).Result;
+
+            if (!IsSuccessStatusCode(response))
+                throw new CosmosDbClientException($"Cannot upsert element response code {response.StatusCode}");
+
+            return response.Resource;
+        }
+
+        /// <summary>
         /// Delete a specific item in current container, with id and partitionKey.
         /// </summary>
         /// <param name="id"></param>
@@ -293,6 +512,33 @@ namespace CosmosDbClient.Repository
                 throw new ArgumentNullException($"{nameof(partitionKey)} is null or empty");
 
             ItemResponse<T> response = await _container.DeleteItemAsync<T>(id, new PartitionKey(partitionKey)).ConfigureAwait(false);
+
+            if (!IsSuccessStatusCode(response))
+                throw new CosmosDbClientException($"Cannot upsert element response code {response.StatusCode}");
+        }
+
+        /// <summary>
+        /// Delete a specific item in current container, with id and partitionKey.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="partitionKey"></param>        
+        /// <exception cref="ArgumentNullException">Throws when id or partitionKey is null</exception>
+        /// <exception cref="ArgumentException">Throws when id is an empty Guid</exception>
+        /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
+        /// <returns></returns>
+        public void DeleteSync(string id, string partitionKey)
+        {
+
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentNullException($"{nameof(id)} is null or empty");
+
+            if (Guid.Parse(id) == Guid.Empty)
+                throw new ArgumentException(ErrorMessages.InvalidElementId);
+
+            if (string.IsNullOrWhiteSpace(partitionKey))
+                throw new ArgumentNullException($"{nameof(partitionKey)} is null or empty");
+
+            ItemResponse<T> response = _container.DeleteItemAsync<T>(id, new PartitionKey(partitionKey)).Result;
 
             if (!IsSuccessStatusCode(response))
                 throw new CosmosDbClientException($"Cannot upsert element response code {response.StatusCode}");
@@ -324,6 +570,31 @@ namespace CosmosDbClient.Repository
         }
 
         /// <summary>
+        /// Delete a specific item in current container.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <exception cref="ArgumentNullException">Throws when element or element.Id or partitionKeyValue is null</exception>
+        /// <exception cref="ArgumentException">Throws when element.Id is an empty Guid</exception>
+        /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
+        /// <returns></returns>
+        public void DeleteSync(T element)
+        {
+            if (element == null)
+                throw new ArgumentNullException($"{nameof(element)} reference not set to an instance of an object<{typeof(T)}>");
+
+            if (string.IsNullOrWhiteSpace(element.Id))
+                throw new ArgumentNullException($"{nameof(element.Id)} is null or empty");
+
+            if (Guid.Parse(element.Id) == Guid.Empty)
+                throw new ArgumentException(ErrorMessages.InvalidElementId);
+
+            ItemResponse<T> response = _container.DeleteItemAsync<T>(element.Id, new PartitionKey(element.Id)).Result;
+
+            if (!IsSuccessStatusCode(response))
+                throw new CosmosDbClientException($"Cannot upsert element response code {response.StatusCode}");
+        }
+
+        /// <summary>
         /// Create a database in the current client , specificing the id
         /// </summary>
         /// <param name="databaseId"></param>
@@ -336,7 +607,24 @@ namespace CosmosDbClient.Repository
 
             DatabaseResponse response = await _client.CreateDatabaseIfNotExistsAsync(databaseId).ConfigureAwait(false);
 
-            if(IsSuccessStatusCode(response))
+            if (IsSuccessStatusCode(response))
+                throw new CosmosDbClientException($"Cannot create database {databaseId} response code {response.StatusCode}");
+        }
+
+        /// <summary>
+        /// Create a database in the current client , specificing the id
+        /// </summary>
+        /// <param name="databaseId"></param>
+        /// <exception cref="ArgumentNullException">Throws when element databaseId is null</exception>
+        /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
+        public void CreateDatabaseSync(string databaseId)
+        {
+            if (string.IsNullOrEmpty(databaseId))
+                throw new ArgumentNullException($"{nameof(databaseId)} is null or empty");
+
+            DatabaseResponse response = _client.CreateDatabaseIfNotExistsAsync(databaseId).Result;
+
+            if (IsSuccessStatusCode(response))
                 throw new CosmosDbClientException($"Cannot create database {databaseId} response code {response.StatusCode}");
         }
 
@@ -362,6 +650,29 @@ namespace CosmosDbClient.Repository
                 throw new CosmosDbClientException($"Cannot create database {containerId} response code {response.StatusCode}");
         }
 
+
+        /// <summary>
+        /// Create a container inside a database
+        /// </summary>
+        /// <param name="containerId"></param>
+        /// <param name="partitionKeyPath"></param>
+        /// <exception cref="ArgumentNullException">Throws when element containerId or partitionKeyPath is null</exception>
+        /// <exception cref="CosmosDbClientException">Throws when Cosmos response code is not between 200-299</exception>
+        /// <returns></returns>
+        public void CreateContainerSync(string containerId, string partitionKeyPath)
+        {
+            if (string.IsNullOrEmpty(containerId))
+                throw new ArgumentNullException($"{nameof(containerId)} is null or empty");
+
+            if (string.IsNullOrEmpty(partitionKeyPath))
+                throw new ArgumentNullException($"{nameof(partitionKeyPath)} is null or empty");
+
+            ContainerResponse response = _database.CreateContainerAsync(containerId, partitionKeyPath).Result;
+
+            if (IsSuccessStatusCode(response))
+                throw new CosmosDbClientException($"Cannot create database {containerId} response code {response.StatusCode}");
+        }
+
         /// <summary>
         /// Count all elements from the container.
         /// </summary>
@@ -375,6 +686,26 @@ namespace CosmosDbClient.Repository
             if (queryResult.HasMoreResults)
             {
                 FeedResponse<T> resultSet = await queryResult.ReadNextAsync().ConfigureAwait(false);
+
+                result = resultSet.Count();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Count all elements from the container.
+        /// </summary>
+        /// <returns></returns>
+        public double CountSync()
+        {
+            var queryResult = _container.GetItemQueryIterator<T>();
+
+            int result = 0;
+
+            if (queryResult.HasMoreResults)
+            {
+                FeedResponse<T> resultSet = queryResult.ReadNextAsync().Result;
 
                 result = resultSet.Count();
             }
